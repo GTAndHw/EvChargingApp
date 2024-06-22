@@ -45,7 +45,6 @@ def start_app():
         # Checking Bluetooth
         if input1 == "B":
             print("Scanning for Car...")
-            print("Found Car.")
             print("Would you like to connect to the device?")
             input2 = input("Type 'Y' for yes or 'N' for no: ")
             print(input2)
