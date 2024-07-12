@@ -98,8 +98,10 @@ home_template = """
         <p>Hello, {{ current_user.id }}!</p>
         {% if session.selected_car %}
             <p>You have chosen: {{ session.selected_car }}</p>
+            <p><a href="/rechoose_car">Re-choose Car</a></p>
+        {% else %}
+            <p><a href="/choose_car">Choose Car</a></p>
         {% endif %}
-        <p><a href="/step2">Start App</a></p>
         <p><a href="/logout">Logout</a></p>
         <div id="map"></div>
     {% else %}
@@ -260,71 +262,58 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route("/step2", methods=["GET", "POST"])
-@login_required
-def step2():
-    if request.method == "POST":
-        choice = request.form.get("choice")
-        if choice == "L":
-            return render_template_string(library_template)
-        elif choice == "B":
-            return render_template_string(bluetooth_template)
-        else:
-            return "Error, wrong value. Please restart the program."
-    return render_template_string(home_template)
-
-@app.route("/choose_car", methods=["POST"])
+@app.route("/choose_car", methods=["GET", "POST"])
 @login_required
 def choose_car():
-    car_choice = request.form.get("car_choice")
-    car_choices = {
-        "Tesla": [
-            "Tesla Model 3", "Tesla Model S", "Tesla Model X", "Tesla Model Y", 
-            "Tesla Model 3 Plus", "Tesla Model S Plus", "Tesla Model X Plus", 
-            "Tesla Model Y Plus", "Tesla Model 3 Plus Hybrid", 
-            "Tesla Model S Plus Hybrid", "Tesla Model X Plus Hybrid", 
-            "Tesla Model Y Plus Hybrid", "Tesla Model 3 Electric", 
-            "Tesla Model S Electric", "Tesla Model X Electric", "Tesla Model Y Electric"
-        ],
-        "BMW": [
-            "BMW i3", "BMW i8", "BMW iX", "BMW iX3", "BMW iX4", "BMW iX5", "BMW iX6", 
-            "BMW iX7", "BMW iX8", "BMW iX3 M", "BMW iX4 M", "BMW iX5 M", "BMW iX6 M", 
-            "BMW iX7 M", "BMW iX8 M", "BMW iX3 M Sport"
-        ],
-        "Mercedes": [
-            "Mercedes-Benz C-Class", "Mercedes-Benz E-Class", "Mercedes-Benz G-Class", 
-            "Mercedes-Benz S-Class"
-        ],
-        "Other": []
-    }
-    if car_choice in car_choices:
-        options = ''.join([f'<option value="{car}">{car}</option>' for car in car_choices[car_choice]])
-        car_choice_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Choose Car Model</title>
-            <style>
-                body {{ font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }}
-                form {{ display: inline-block; text-align: left; }}
-                label, select, input {{ display: block; margin: 10px 0; }}
-            </style>
-        </head>
-        <body>
-            <h2>You chose {car_choice}</h2>
-            <form method="post" action="/confirm_car">
-                <label>Type the number of the car you would like to choose:</label>
-                <select name="car_model">
-                    {options}
-                </select>
-                <input type="submit" value="Submit">
-            </form>
-        </body>
-        </html>
-        """
-        return render_template_string(car_choice_html, car_choice=car_choice)
-    else:
-        return render_template_string(result_template, message=f"Your car is a {car_choice}")
+    if request.method == "POST":
+        car_choice = request.form.get("car_choice")
+        car_choices = {
+            "Tesla": [
+                "Tesla Model 3", "Tesla Model S", "Tesla Model X", "Tesla Model Y", 
+                "Tesla Model 3 Plus", "Tesla Model S Plus", "Tesla Model X Plus", 
+                "Tesla Model Y Plus", "Tesla Model 3 Plus Hybrid", 
+                "Tesla Model S Plus Hybrid", "Tesla Model X Plus Hybrid", 
+                "Tesla Model Y Plus Hybrid", "Tesla Model 3 Electric", 
+                "Tesla Model S Electric", "Tesla Model X Electric", "Tesla Model Y Electric"
+            ],
+            "BMW": [
+                "BMW i3", "BMW i8", "BMW iX", "BMW iX3", "BMW iX4", "BMW iX5", "BMW iX6", 
+                "BMW iX7", "BMW iX8", "BMW iX3 M", "BMW iX4 M", "BMW iX5 M", "BMW iX6 M", 
+                "BMW iX7 M", "BMW iX8 M", "BMW iX3 M Sport"
+            ],
+            "Mercedes": [
+                "Mercedes-Benz C-Class", "Mercedes-Benz E-Class", "Mercedes-Benz G-Class", 
+                "Mercedes-Benz S-Class"
+            ],
+            "Other": []
+        }
+        if car_choice in car_choices:
+            options = ''.join([f'<option value="{car}">{car}</option>' for car in car_choices[car_choice]])
+            car_choice_html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Choose Car Model</title>
+                <style>
+                    body {{ font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }}
+                    form {{ display: inline-block; text-align: left; }}
+                    label, select, input {{ display: block; margin: 10px 0; }}
+                </style>
+            </head>
+            <body>
+                <h2>You chose {car_choice}</h2>
+                <form method="post" action="/confirm_car">
+                    <label>Choose the car model you would like to choose:</label>
+                    <select name="car_model">
+                        {options}
+                    </select>
+                    <input type="submit" value="Submit">
+                </form>
+            </body>
+            </html>
+            """
+            return render_template_string(car_choice_html, car_choice=car_choice)
+    return render_template_string(library_template)
 
 @app.route("/confirm_car", methods=["POST"])
 @login_required
@@ -333,23 +322,11 @@ def confirm_car():
     session['selected_car'] = car_model
     return redirect(url_for('index'))
 
-@app.route("/bluetooth_choice", methods=["POST"])
+@app.route("/rechoose_car")
 @login_required
-def bluetooth_choice():
-    connect = request.form.get("connect")
-    if connect == "Y":
-        return render_template_string(use_device_template)
-    else:
-        return render_template_string(result_template, message="Device is now not used.")
-
-@app.route("/use_device_choice", methods=["POST"])
-@login_required
-def use_device_choice():
-    use = request.form.get("use")
-    if use == "Y":
-        return render_template_string(result_template, message="Using the device... Device is now used.")
-    else:
-        return render_template_string(result_template, message="Device is now not used.")
+def rechoose_car():
+    session.pop('selected_car', None)
+    return redirect(url_for('choose_car'))
 
 if __name__ == "__main__":
     app.run(debug=True)
