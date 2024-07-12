@@ -1,21 +1,19 @@
-from flask import Flask, render_template_string, request, redirect, url_for, flash, session
+from flask import Flask, render_template_string, request, redirect, url_for, session, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
-
-# Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Mock user store (replace with your actual user management)
-users = {'user@example.com': {'password': 'password'}}
-
-# User class for Flask-Login (replace with your actual User model)
+# User class for Flask-Login
 class User(UserMixin):
     def __init__(self, id):
         self.id = id
+
+# In-memory user store for demonstration purposes
+users = {'user@example.com': {'password': 'password'}}
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -84,18 +82,17 @@ home_template = """
         label, select, input { display: block; margin: 10px 0; }
         #map { height: 400px; width: 100%; margin-top: 20px; }
     </style>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
     <script>
         function initMap() {
             var mapOptions = {
-                center: {lat: 37.7749, lng: -122.4194},
+                center: {lat: 37.7749, lng: -122.4194}, // Default to San Francisco, change as needed
                 zoom: 10
             };
             var map = new google.maps.Map(document.getElementById('map'), mapOptions);
         }
     </script>
 </head>
-<body onload="initMap()">
+<body>
     <h1>Welcome to the BBC Ev Charging App</h1>
     {% if current_user.is_authenticated %}
         <p>Hello, {{ current_user.id }}!</p>
@@ -108,13 +105,125 @@ home_template = """
     {% else %}
         <p>Please <a href="/login">login</a> or <a href="/signup">sign up</a> to continue.</p>
     {% endif %}
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap"></script>
 </body>
 </html>
 """
 
-# Routes
+# Library template
+library_template = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Library</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        form { display: inline-block; text-align: left; }
+        label, select, input { display: block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h2>Here is the car library:</h2>
+    <form method="post" action="/choose_car">
+        <label>Type the car you would like to choose:</label>
+        <select name="car_choice">
+            <option value="Tesla">Tesla</option>
+            <option value="BMW">BMW</option>
+            <option value="Mercedes">Mercedes</option>
+            <option value="Other">Other</option>
+        </select>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
+"""
 
-@app.route("/")
+# Bluetooth template
+bluetooth_template = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bluetooth Scan</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        form { display: inline-block; text-align: left; }
+        label, select, input { display: block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h2>Scanning for Car...</h2>
+    <form method="post" action="/bluetooth_choice">
+        <label>Would you like to connect to the device?</label>
+        <select name="connect">
+            <option value="Y">Yes</option>
+            <option value="N">No</option>
+        </select>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
+"""
+
+# Car choice template
+car_choice_template = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Car Choice</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <h2>You have chosen the {{ car_choice }}</h2>
+</body>
+</html>
+"""
+
+# Use device template
+use_device_template = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Use Device</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        form { display: inline-block; text-align: left; }
+        label, select, input { display: block; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h2>Connecting to the device...</h2>
+    <form method="post" action="/use_device_choice">
+        <label>Would you like to use the device?</label>
+        <select name="use">
+            <option value="Y">Yes</option>
+            <option value="N">No</option>
+        </select>
+        <input type="submit" value="Submit">
+    </form>
+</body>
+</html>
+"""
+
+# Result template
+result_template = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <h2>{{ message }}</h2>
+</body>
+</html>
+"""
+
+@app.route("/", methods=["GET", "POST"])
+@login_required
 def index():
     return render_template_string(home_template)
 
